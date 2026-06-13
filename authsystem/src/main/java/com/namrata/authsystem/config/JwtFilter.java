@@ -45,11 +45,14 @@ public class JwtFilter extends OncePerRequestFilter {
                                 List.of(new SimpleGrantedAuthority(role))
                         );
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
 
             } catch (Exception e) {
 
                 System.out.println("JWT ERROR ❌");
+                System.out.println("TOKEN = " + token);
+
                 e.printStackTrace();
             }
         }

@@ -1,25 +1,50 @@
-import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    Tooltip,
-    CartesianGrid,
-    ResponsiveContainer
-} from "recharts";
+import { useEffect, useState } from "react";
+import API from "../services/api";
 
 function ScoreAnalytics() {
 
-    const data = [
-        { month: "Jan", score: 65 },
-        { month: "Feb", score: 70 },
-        { month: "Mar", score: 74 },
-        { month: "Apr", score: 79 },
-        { month: "May", score: 84 },
-        { month: "Jun", score: 88 }
-    ];
+    const [scoreText, setScoreText] = useState("Loading...");
+    const [scoreValue, setScoreValue] = useState(0);
+
+    useEffect(() => {
+        fetchScore();
+    }, []);
+
+    const fetchScore = async () => {
+
+        try {
+
+            const token = localStorage.getItem("token");
+
+            const response = await API.get(
+                "/financial-goal/budget-score",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            const text = response.data;
+
+            setScoreText(text);
+
+            const match = text.match(/(\d+)\/100/);
+
+            if (match) {
+                setScoreValue(Number(match[1]));
+            }
+
+        } catch (error) {
+
+            console.log(error);
+
+            setScoreText("Unable to load score");
+        }
+    };
 
     return (
+
         <div
             style={{
                 minHeight: "100vh",
@@ -28,30 +53,34 @@ function ScoreAnalytics() {
                 padding: "40px"
             }}
         >
-            <h1>Financial Health Score Analytics</h1>
+
+            <h1>
+                Financial Health Score
+            </h1>
 
             <div
                 style={{
                     background: "#0b1025",
-                    padding: "30px",
+                    padding: "40px",
                     borderRadius: "20px",
-                    marginTop: "30px"
+                    marginTop: "30px",
+                    textAlign: "center"
                 }}
             >
-                <ResponsiveContainer width="100%" height={400}>
-                    <LineChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line
-                            type="monotone"
-                            dataKey="score"
-                            stroke="#3da9fc"
-                            strokeWidth={4}
-                        />
-                    </LineChart>
-                </ResponsiveContainer>
+
+                <h2
+                    style={{
+                        fontSize: "90px",
+                        color: "#3da9fc"
+                    }}
+                >
+                    {scoreValue}
+                </h2>
+
+                <h3>
+                    /100
+                </h3>
+
             </div>
 
             <div
@@ -62,15 +91,17 @@ function ScoreAnalytics() {
                     borderRadius: "20px"
                 }}
             >
-                <h2>AI Insight</h2>
+
+                <h2>
+                    AI Assessment
+                </h2>
 
                 <p>
-                    Your financial health score has improved
-                    steadily over the last six months,
-                    indicating stronger spending discipline
-                    and better savings habits.
+                    {scoreText}
                 </p>
+
             </div>
+
         </div>
     );
 }

@@ -29,15 +29,15 @@ function AuthForm(props) {
 
                 .then((response) => {
 
-                    console.log("TOKEN =", response.data);
+                    console.log("FULL RESPONSE =", response);
 
-                    // SAVE JWT TOKEN
+                    console.log("DATA =", response.data);
+
                     localStorage.setItem(
                         "token",
                         response.data
                     );
 
-                    // OPEN DASHBOARD
                     navigate("/financial-planning")
                 })
 

@@ -4,6 +4,7 @@ import com.namrata.authsystem.model.Expense;
 import com.namrata.authsystem.model.FinancialGoal;
 import com.namrata.authsystem.model.InsightCard;
 import com.namrata.authsystem.model.User;
+import com.namrata.authsystem.model.GoalAnalysisResponse;
 
 import com.namrata.authsystem.repository.ExpenseRepository;
 import com.namrata.authsystem.repository.FinancialGoalRepository;
@@ -32,17 +33,53 @@ public class FinancialGoalController {
     @Autowired
     private ExpenseRepository expenseRepository;
 
-    // ✅ SAVE FINANCIAL GOAL
     @PostMapping("/save")
     public FinancialGoal saveGoal(
             @RequestBody FinancialGoal financialGoal,
             Authentication authentication
     ) {
-        System.out.println("SAVE API HIT");
-
         String email = authentication.getName();
 
+        System.out.println("EMAIL = " + email);
+
         User user = userRepository.findByEmail(email);
+
+        System.out.println("USER ID = " + user.getId());
+
+        FinancialGoal existingGoal =
+                financialGoalRepository.findByUser(user);
+
+        System.out.println("GOAL = " + existingGoal);
+
+        //String email = authentication.getName();
+
+        //User user = userRepository.findByEmail(email);
+
+        //FinancialGoal existingGoal =
+                //financialGoalRepository.findByUser(user);
+
+        if(existingGoal != null){
+
+            existingGoal.setMonthlyIncome(
+                    financialGoal.getMonthlyIncome());
+
+            existingGoal.setGoalName(
+                    financialGoal.getGoalName());
+
+            existingGoal.setTargetAmount(
+                    financialGoal.getTargetAmount());
+
+            existingGoal.setTargetMonths(
+                    financialGoal.getTargetMonths());
+
+            existingGoal.setEmergencyReserve(
+                    financialGoal.getEmergencyReserve());
+
+            existingGoal.setFixedCommitments(
+                    financialGoal.getFixedCommitments());
+
+            return financialGoalRepository.save(existingGoal);
+        }
 
         financialGoal.setUser(user);
 
@@ -339,9 +376,13 @@ public class FinancialGoalController {
         }
 
         // Percentage calculation
-        double percentage =
+        double percentage = 0;
 
-                (highestAmount / totalSpending) * 100;
+        if(totalSpending > 0){
+
+            percentage =
+                    (highestAmount / totalSpending) * 100;
+        }
 
         String formattedPercentage =
                 String.format("%.1f", percentage);
@@ -465,6 +506,8 @@ public class FinancialGoalController {
             percentage =
                     (highestAmount / totalSpending) * 100;
         }
+        String formattedPercentage =
+                String.format("%.1f", percentage);
 
         // Risky category concentration
         if (percentage > 70) {
@@ -692,9 +735,13 @@ public class FinancialGoalController {
         }
 
         // Percentage
-        double percentage =
+        double percentage = 0;
 
-                (highestAmount / totalSpending) * 100;
+        if (totalSpending > 0) {
+
+            percentage =
+                    (highestAmount / totalSpending) * 100;
+        }
 
         String formattedPercentage =
                 String.format("%.1f", percentage);
@@ -799,4 +846,148 @@ public class FinancialGoalController {
 
 
     }
+    @GetMapping("/score-analytics")
+    public Map<String,Object> scoreAnalytics(
+            Authentication authentication
+    ) {
+
+        Map<String,Object> response =
+                new HashMap<>();
+
+        response.put(
+                "months",
+                List.of("Jan","Feb","Mar","Apr","May","Jun")
+        );
+
+        response.put(
+                "scores",
+                List.of(65,70,74,79,84,88)
+        );
+
+        return response;
+    }
+    @GetMapping("/suggestion-analytics")
+    public Map<String,Object> suggestionAnalytics(
+            Authentication authentication
+    ) {
+
+        Map<String,Object> response =
+                new HashMap<>();
+
+        response.put("currentSpending", 5000);
+
+        response.put("recommendedSpending", 4200);
+
+        return response;
+    }
+    @GetMapping("/goal-analytics")
+    public Map<String,Object> goalAnalytics(
+            Authentication authentication
+    ) {
+
+        Map<String,Object> response =
+                new HashMap<>();
+
+        response.put("savings",90);
+        response.put("income",80);
+        response.put("expenses",70);
+        response.put("investments",65);
+        response.put("emergency",95);
+
+        return response;
+    }
+
+    // ✅ GET LOGGED-IN USER GOAL
+    @GetMapping("/my-goal")
+    public FinancialGoal getMyGoal(
+            Authentication authentication
+    ) {
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email);
+
+        return financialGoalRepository.findByUser(user);
+    }
+
+    // ✅ CHECK IF GOAL EXISTS
+    @GetMapping("/exists")
+    public boolean goalExists(
+            Authentication authentication
+    ) {
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email);
+
+        FinancialGoal goal =
+                financialGoalRepository.findByUser(user);
+
+        return goal != null;
+    }
+    @GetMapping("/goal-analysis")
+    public GoalAnalysisResponse getGoalAnalysis(
+            Authentication authentication
+    ) {
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email);
+
+        FinancialGoal goal =
+                financialGoalRepository.findByUser(user);
+
+        List<Expense> expenses =
+                expenseRepository.findByUser(user);
+
+        double totalExpenses = 0;
+
+        for (Expense expense : expenses) {
+
+            totalExpenses += expense.getAmount();
+        }
+
+        double income =
+                goal.getMonthlyIncome();
+
+        double remainingMoney =
+                income - totalExpenses;
+
+        double monthsNeeded = 0;
+
+        if (remainingMoney > 0) {
+
+            monthsNeeded =
+                    Math.ceil(
+                            goal.getTargetAmount()
+                                    / remainingMoney
+                    );
+        }
+
+        GoalAnalysisResponse response =
+                new GoalAnalysisResponse();
+
+        response.setGoalName(
+                goal.getGoalName()
+        );
+
+        response.setGoalAmount(
+                goal.getTargetAmount()
+        );
+
+        response.setIncome(income);
+
+        response.setExpenses(totalExpenses);
+
+        response.setRemainingMoney(
+                remainingMoney
+        );
+
+        response.setMonthsNeeded(
+                monthsNeeded
+        );
+
+        return response;
+    }
+
 }

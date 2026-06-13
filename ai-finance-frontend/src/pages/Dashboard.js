@@ -9,9 +9,7 @@ function Dashboard() {
     const token = localStorage.getItem("token");
 
     useEffect(() => {
-
         fetchDashboard();
-
     }, []);
 
     const fetchDashboard = async () => {
@@ -27,11 +25,18 @@ function Dashboard() {
                 }
             );
 
+            console.log("DASHBOARD RESPONSE =", response.data);
+
             setCards(response.data);
 
         } catch (error) {
 
-            console.log(error);
+            console.log("DASHBOARD ERROR =", error);
+
+            if (error.response) {
+                console.log("STATUS =", error.response.status);
+                console.log("DATA =", error.response.data);
+            }
         }
     };
 
@@ -101,17 +106,7 @@ function Dashboard() {
                         title={card.title}
                         message={card.message}
                         type={card.type}
-                        route={
-                            card.type === "score"
-                                ? "/analytics/score"
-                                : card.type === "warning"
-                                    ? "/analytics/warning"
-                                    : card.type === "suggestion"
-                                        ? "/analytics/suggestion"
-                                        : card.type === "goal"
-                                            ? "/analytics/goal"
-                                            : "/analytics/insight"
-                        }
+                        route={`/analytics/${card.type}`}
                     />
 
                 ))}
