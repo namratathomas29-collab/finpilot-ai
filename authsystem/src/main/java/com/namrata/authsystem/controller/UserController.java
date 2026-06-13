@@ -1,6 +1,7 @@
 package com.namrata.authsystem.controller;
 
 import com.namrata.authsystem.repository.UserRepository;
+import com.namrata.authsystem.service.EmailService;
 import com.namrata.authsystem.util.JwtUtil;
 import com.namrata.authsystem.model.User;
 import com.namrata.authsystem.service.UserService;
@@ -23,6 +24,9 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private EmailService emailService;
+
     // ✅ HEALTH CHECK
     @GetMapping("/")
     public String home() {
@@ -34,6 +38,19 @@ public class UserController {
     public String register(@RequestBody User user) {
         userService.registerUser(user);
         return "User registered successfully ✅";
+    }
+
+    // ✅ email
+    @GetMapping("/test-email")
+    public String testEmail() {
+
+        emailService.sendEmail(
+                "namratathomas29@gmail.com",
+                "FinPilot Test Email 🚀",
+                "Congratulations! Your FinPilot Email Service is working successfully."
+        );
+
+        return "Test email sent successfully!";
     }
 
     // ✅ LOGIN → RETURNS ONLY TOKEN

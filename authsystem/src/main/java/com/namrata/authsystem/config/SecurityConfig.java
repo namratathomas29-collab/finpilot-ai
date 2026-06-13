@@ -96,7 +96,8 @@ public class SecurityConfig {
                         // PUBLIC APIs
                         .requestMatchers(
                                 "/api/login",
-                                "/api/register"
+                                "/api/register",
+                                "/api/test-email"
                         ).permitAll()
 
                         // EXPENSE APIs
